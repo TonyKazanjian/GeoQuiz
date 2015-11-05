@@ -19,6 +19,7 @@ public class CheatActivity extends AppCompatActivity {
 
     private static final String EXTRA_ANSWER_IS_TRUE = "com.bignerdranch.android.geoquiz.answer_is_true";
     private static final String EXTRA_ANSWER_SHOWN = "com.bignerdranch.android.geoquiz.answer_shown";
+    private static final String EXTRA_QUESTION_WAS_CHEATED = "com.bignerdranch.android.geoquiz.question_was_cheated";
     private static final String PLAYER_CHEATED = "player cheated";
     private static final String QUIZ_ANSWER = "quiz answer";
     private static final String TAG = CheatActivity.class.getSimpleName();
@@ -32,6 +33,10 @@ public class CheatActivity extends AppCompatActivity {
     //to keep track whether or not hte answer was shown
     private boolean mAnswerWasShown = false;
 
+    //to keep track whether or not the question was cheated on
+    private boolean mQuestionWasCheated = false;
+    private static int mCheatedQuestion = QuizActivity.currentQuestion;
+
     // Making a method that encapsulates putting an extra into a new intent
     public static Intent newIntent(Context packageContext, boolean answerIsTrue) {
         Intent i = new Intent(packageContext, CheatActivity.class);
@@ -40,9 +45,10 @@ public class CheatActivity extends AppCompatActivity {
     }
 
     // For passing the data back to the main activity
-    private void setAnswerShownResult (boolean isAnswerShown){
+    private void setAnswerShownResult (boolean isAnswerShown, int cheatedQuestion){
         Intent data = new Intent();
         data.putExtra(EXTRA_ANSWER_SHOWN, isAnswerShown);
+        data.putExtra(EXTRA_QUESTION_WAS_CHEATED, cheatedQuestion);
         setResult(RESULT_OK, data);
     }
 
@@ -50,6 +56,11 @@ public class CheatActivity extends AppCompatActivity {
     public static boolean wasAnswerShown(Intent result){
         return result.getBooleanExtra(EXTRA_ANSWER_SHOWN,false);
     }
+
+    public static int questionWasCheated(Intent result){
+        return result.getIntExtra(EXTRA_QUESTION_WAS_CHEATED, mCheatedQuestion);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +78,7 @@ public class CheatActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             mAnswerWasShown = savedInstanceState.getBoolean(PLAYER_CHEATED,false);
             mAnswerIsTrue = savedInstanceState.getBoolean(QUIZ_ANSWER,false);
+
             if (mAnswerWasShown) {
                 showAnswer();
             }
@@ -77,7 +89,7 @@ public class CheatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showAnswer();
-                setAnswerShownResult(true);
+                setAnswerShownResult(true, mCheatedQuestion);
                 mAnswerWasShown = true;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     int cx = mShowAnswer.getWidth() / 2;

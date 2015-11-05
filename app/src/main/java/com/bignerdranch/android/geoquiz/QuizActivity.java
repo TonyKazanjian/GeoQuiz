@@ -20,6 +20,7 @@ public class QuizActivity extends AppCompatActivity {
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
     private static final String KEY_CHEATER = "cheater";
+    private static final String KEY_QUESTION_CHEATED = "question cheated";
     private static final int REQUEST_CODE_CHEAT = 0;
 
     private Button mTrueButton;
@@ -29,9 +30,10 @@ public class QuizActivity extends AppCompatActivity {
     private ImageButton mPrevButton;
     private TextView mQuestionTextView;
     private boolean mIsCheater;
+    private int mCheatedQuestion;
     private HashMap<Integer, Boolean> cheaterMap = new HashMap<>();
 
-    private Question [] mQuestionBank = new Question[] {
+    private static Question [] mQuestionBank = new Question[] {
             new Question(R.string.question_oceans, true),
             new Question(R.string.question_mideast, false),
             new Question(R.string.question_africa, false),
@@ -39,12 +41,21 @@ public class QuizActivity extends AppCompatActivity {
             new Question(R.string.question_asia, true)
     };
 
-    private int mCurrentIndex = 0;
+    private static int mCurrentIndex = 0;
+
+    public static int currentQuestion = mQuestionBank[mCurrentIndex].getTextResId();
 
     //Increments the index and updates the TextView text
     private void updateQuestion(){
         int question = mQuestionBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
+    }
+
+    private void didCheatHappen(){
+        //code where cheated question is disabled
+        if (cheaterMap.containsValue(true)){
+            mQuestionTextView.setEnabled(false);
+        }
     }
 
     private void checkAnswer(boolean userPressedTrue){
@@ -66,21 +77,12 @@ public class QuizActivity extends AppCompatActivity {
         Toast.makeText(this,messageResId,Toast.LENGTH_SHORT).show();
     }
 
-    private void didCheatHappen(){
-        if (mIsCheater){
-            //TODO: get the TextView at the current index
-            int question = mQuestionBank[mCurrentIndex].getTextResId();
-            cheaterMap.put(question, true);
-            mQuestionTextView.findViewById(question);
-            mQuestionTextView.setEnabled(false);
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         //see what value is held in th emap at a particular key (the resource ID for the question)
         //this method should pass the resource ID associated w/ the question that the person cheated on
         //cheat acivity needs to send along the resource id
+
         if (resultCode != Activity.RESULT_OK){
             return;
         }
@@ -89,7 +91,10 @@ public class QuizActivity extends AppCompatActivity {
                 return;
             }
             mIsCheater = CheatActivity.wasAnswerShown(data);
+            mCheatedQuestion = CheatActivity.questionWasCheated(data);
+            cheaterMap.put(mCheatedQuestion,true);
         }
+        didCheatHappen();
     }
 
     @Override
@@ -98,12 +103,13 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate(Bundle) called");
         setContentView(R.layout.activity_quiz);
 
-        cheaterMap.put(mCurrentIndex,false);
+        cheaterMap.put(mCheatedQuestion,false);
 
         //checking for the savedInstanceState value
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX,0);
             mIsCheater = savedInstanceState.getBoolean(KEY_CHEATER,false);
+            mCheatedQuestion = savedInstanceState.getInt(KEY_QUESTION_CHEATED,0);
         }
 
         mQuestionTextView = (TextView)findViewById(R.id.question_text_view);
@@ -139,9 +145,6 @@ public class QuizActivity extends AppCompatActivity {
                 boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
                 Intent i = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
                 startActivityForResult(i, REQUEST_CODE_CHEAT);
-                if(mIsCheater) {
-                    cheaterMap.put(mCurrentIndex, true);
-                }
             }
         });
 
@@ -149,7 +152,6 @@ public class QuizActivity extends AppCompatActivity {
         mNextButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                didCheatHappen();
                 int nextIndex = mCurrentIndex+1;
                 if(nextIndex > 0) {
                     mPrevButton.setAlpha(1.0f);
@@ -166,7 +168,6 @@ public class QuizActivity extends AppCompatActivity {
         mPrevButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                didCheatHappen();
                 int prevIndex = mCurrentIndex - 1;
                 if (prevIndex >= 0) {
                     mCurrentIndex = prevIndex % mQuestionBank.length;
@@ -189,6 +190,7 @@ public class QuizActivity extends AppCompatActivity {
         //writes the value of the mCurrentIndex tot he bundle with the constant as its key
         savedInstanceState.putInt(KEY_INDEX,mCurrentIndex);
         savedInstanceState.putBoolean(KEY_CHEATER, mIsCheater);
+        savedInstanceState.putInt(KEY_QUESTION_CHEATED,mCheatedQuestion);
     }
 
     @Override
