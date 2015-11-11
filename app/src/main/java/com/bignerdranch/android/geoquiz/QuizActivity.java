@@ -48,13 +48,13 @@ public class QuizActivity extends AppCompatActivity {
     //Increments the index and updates the TextView text
     private void updateQuestion(){
         int question = mQuestionBank[mCurrentIndex].getTextResId();
+        currentQuestion = question;
         mQuestionTextView.setText(question);
-    }
 
-    private void didCheatHappen(){
-        //code where cheated question is disabled
-        if (cheaterMap.containsValue(true)){
+        if (cheaterMap.containsKey(question) && cheaterMap.get(question)== true){ //checks to see if this key (the question) is even on the map
             mQuestionTextView.setEnabled(false);
+        } else {
+            mQuestionTextView.setEnabled(true);
         }
     }
 
@@ -93,8 +93,8 @@ public class QuizActivity extends AppCompatActivity {
             mIsCheater = CheatActivity.wasAnswerShown(data);
             mCheatedQuestion = CheatActivity.questionWasCheated(data);
             cheaterMap.put(mCheatedQuestion,true);
+            mQuestionTextView.setEnabled(false);
         }
-        didCheatHappen();
     }
 
     @Override
@@ -102,8 +102,6 @@ public class QuizActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate(Bundle) called");
         setContentView(R.layout.activity_quiz);
-
-        cheaterMap.put(mCheatedQuestion,false);
 
         //checking for the savedInstanceState value
         if (savedInstanceState != null) {
@@ -142,6 +140,7 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //start CheatActivity
+                //TODO: pass in the resId to the question you're referencing
                 boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
                 Intent i = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
                 startActivityForResult(i, REQUEST_CODE_CHEAT);

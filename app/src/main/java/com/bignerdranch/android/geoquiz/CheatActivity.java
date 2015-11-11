@@ -35,7 +35,7 @@ public class CheatActivity extends AppCompatActivity {
 
     //to keep track whether or not the question was cheated on
     private boolean mQuestionWasCheated = false;
-    private static int mCheatedQuestion = QuizActivity.currentQuestion;
+    private static int mCheatedQuestion;
 
     // Making a method that encapsulates putting an extra into a new intent
     public static Intent newIntent(Context packageContext, boolean answerIsTrue) {
@@ -48,6 +48,7 @@ public class CheatActivity extends AppCompatActivity {
     private void setAnswerShownResult (boolean isAnswerShown, int cheatedQuestion){
         Intent data = new Intent();
         data.putExtra(EXTRA_ANSWER_SHOWN, isAnswerShown);
+        //TODO: int cheatedQuestion should be the resID (should reference mCheatedQuestons variable)
         data.putExtra(EXTRA_QUESTION_WAS_CHEATED, cheatedQuestion);
         setResult(RESULT_OK, data);
     }
@@ -58,6 +59,7 @@ public class CheatActivity extends AppCompatActivity {
     }
 
     public static int questionWasCheated(Intent result){
+        //TODO: pass back the resID that you get from Quiz Activity. mCheatedQuestion becomes a member variable, assigned by the extra we get from quizactiity
         return result.getIntExtra(EXTRA_QUESTION_WAS_CHEATED, mCheatedQuestion);
     }
 
@@ -65,6 +67,9 @@ public class CheatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cheat);
+
+        //TODO: should be a call to getExtra from the intent received from quiz activity
+        mCheatedQuestion = QuizActivity.currentQuestion;
 
         mApiVersion = (TextView) findViewById(R.id.api_version_text_view);
         mApiVersion.setText("API level " + Build.VERSION.SDK);
