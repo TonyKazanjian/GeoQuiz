@@ -20,6 +20,7 @@ public class CheatActivity extends AppCompatActivity {
     private static final String EXTRA_ANSWER_IS_TRUE = "com.bignerdranch.android.geoquiz.answer_is_true";
     private static final String EXTRA_ANSWER_SHOWN = "com.bignerdranch.android.geoquiz.answer_shown";
     private static final String EXTRA_QUESTION_WAS_CHEATED = "com.bignerdranch.android.geoquiz.question_was_cheated";
+    private static final String EXTRA_QUESTION_TO_CHEAT = "com.bignerdranch.android.geoquiz.question_to_cheat";
     private static final String PLAYER_CHEATED = "player cheated";
     private static final String QUIZ_ANSWER = "quiz answer";
     private static final String TAG = CheatActivity.class.getSimpleName();
@@ -30,38 +31,43 @@ public class CheatActivity extends AppCompatActivity {
     private TextView mApiVersion;
     private Button mShowAnswer;
 
+
     //to keep track whether or not hte answer was shown
     private boolean mAnswerWasShown = false;
 
     //to keep track whether or not the question was cheated on
-    private boolean mQuestionWasCheated = false;
-    private static int mCheatedQuestion;
+
+    private int mCheatedQuestion;
 
     // Making a method that encapsulates putting an extra into a new intent
-    public static Intent newIntent(Context packageContext, boolean answerIsTrue) {
+    public static Intent newIntent(Context packageContext, boolean answerIsTrue, int questionToCheat) {
         Intent i = new Intent(packageContext, CheatActivity.class);
         i.putExtra(EXTRA_ANSWER_IS_TRUE, answerIsTrue);
+        i.putExtra(EXTRA_QUESTION_TO_CHEAT, questionToCheat);
         return i;
     }
 
     // For passing the data back to the main activity
-    private void setAnswerShownResult (boolean isAnswerShown, int cheatedQuestion){
+    private void setAnswerShownResult (boolean isAnswerShown){
         Intent data = new Intent();
         data.putExtra(EXTRA_ANSWER_SHOWN, isAnswerShown);
         //TODO: int cheatedQuestion should be the resID (should reference mCheatedQuestons variable)
+        int cheatedQuestion = mCheatedQuestion;
         data.putExtra(EXTRA_QUESTION_WAS_CHEATED, cheatedQuestion);
         setResult(RESULT_OK, data);
     }
 
     // Method for showing the result that QuizActivity can use
     public static boolean wasAnswerShown(Intent result){
+
         return result.getBooleanExtra(EXTRA_ANSWER_SHOWN,false);
     }
 
-    public static int questionWasCheated(Intent result){
-        //TODO: pass back the resID that you get from Quiz Activity. mCheatedQuestion becomes a member variable, assigned by the extra we get from quizactiity
-        return result.getIntExtra(EXTRA_QUESTION_WAS_CHEATED, mCheatedQuestion);
-    }
+//    public static int questionWasCheated(Intent result){
+//        //TODO: pass back the resID that you get from Quiz Activity. mCheatedQuestion becomes a member variable, assigned by the extra we get from quizactiity
+//
+//        return result.getIntExtra(EXTRA_QUESTION_WAS_CHEATED, 0);
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +75,8 @@ public class CheatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cheat);
 
         //TODO: should be a call to getExtra from the intent received from quiz activity
-        mCheatedQuestion = QuizActivity.currentQuestion;
+        mCheatedQuestion = getIntent().getIntExtra(EXTRA_QUESTION_TO_CHEAT,0);
+
 
         mApiVersion = (TextView) findViewById(R.id.api_version_text_view);
         mApiVersion.setText("API level " + Build.VERSION.SDK);
@@ -94,7 +101,7 @@ public class CheatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showAnswer();
-                setAnswerShownResult(true, mCheatedQuestion);
+                setAnswerShownResult(true);
                 mAnswerWasShown = true;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     int cx = mShowAnswer.getWidth() / 2;
